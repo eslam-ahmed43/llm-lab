@@ -1,0 +1,44 @@
+{
+  "backend": "hf_batched",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "prompt_len": 2048,
+  "max_tokens": 128,
+  "rows": [
+    {
+      "concurrency": 1,
+      "n_requests": 8,
+      "ttft_p50_s": 0.7890831740000976,
+      "ttft_p95_s": 0.8221309719997407,
+      "latency_p50_s": 5.382318973499878,
+      "throughput_tok_s": 23.689052164771056,
+      "peak_gpu_mib": 12883
+    },
+    {
+      "concurrency": 4,
+      "n_requests": 8,
+      "ttft_p50_s": 2.9787221005001356,
+      "ttft_p95_s": 2.999488348000341,
+      "latency_p50_s": 11.373534379499915,
+      "throughput_tok_s": 45.01405028101178,
+      "peak_gpu_mib": 12883
+    },
+    {
+      "concurrency": 16,
+      "n_requests": 32,
+      "ttft_p50_s": 12.691950491499938,
+      "ttft_p95_s": 12.844106462999662,
+      "latency_p50_s": 38.747201155000084,
+      "throughput_tok_s": 52.8540723239228,
+      "peak_gpu_mib": 12883
+    },
+    {
+      "concurrency": 64,
+      "n_requests": 128,
+      "ttft_p50_s": 129.15307033099998,
+      "ttft_p95_s": 129.25323301100025,
+      "latency_p50_s": 155.19916887399995,
+      "throughput_tok_s": 52.767759244910586,
+      "peak_gpu_mib": 12883
+    }
+  ]
+}

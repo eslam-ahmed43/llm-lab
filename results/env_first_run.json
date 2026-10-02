@@ -1,0 +1,10 @@
+{
+  "gpu": "Tesla T4, 580.159.04, 15360 MiB",
+  "python": "3.12.13",
+  "torch_client_env": "2.10.0+cu128",
+  "transformers": "5.0.0",
+  "vllm": "0.30.0",
+  "torch_vllm_env": "2.13.0+cu132",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "dtype": "float16"
+}

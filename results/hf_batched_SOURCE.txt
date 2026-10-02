@@ -1,0 +1,1 @@
+hf_batched result files were reconstructed from the printed log of the original run (raw files were lost with the draft session). Config: static batching, max_batch=16, max_wait_ms=20, requests_per_level=2, Tesla T4, transformers 5.0.0, torch 2.10.0+cu128.
