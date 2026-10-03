@@ -164,5 +164,5 @@ Everything needed is in the repository: the client (`src/bench_inference.py`), t
 
 ## 8. What comes next
 
-- **Exp 2, quantization** (`src/quantize.py`): FP16 against INT8 and INT4 (bitsandbytes NF4, optionally AWQ or GPTQ checkpoints) on memory, latency, throughput, WikiText-2 perplexity and ARC-Easy accuracy.
+- **Exp 2, quantization**: done, see `REPORT_EXP2.md`. Next there: AWQ or GPTQ checkpoints and quantization combined with vLLM serving.
 - **Exp 3, prefix caching sweep**: vary the fraction of each prompt that is a shared prefix, with the cache on and off.

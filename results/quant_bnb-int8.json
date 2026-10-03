@@ -1,0 +1,67 @@
+{
+  "method": "bnb-int8",
+  "base_method": "bnb-int8",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "env": {
+    "gpu": "Tesla T4",
+    "torch": "2.10.0+cu128",
+    "cuda": "12.8",
+    "transformers": "5.0.0",
+    "bitsandbytes": "0.50.2"
+  },
+  "load": {
+    "seconds": 6.93892943000003,
+    "footprint_gib": 1.6551775932312012,
+    "allocated_gib": 1.6612434387207031
+  },
+  "speed": [
+    {
+      "batch_size": 1,
+      "prompt_len": 512,
+      "new_tokens": 128,
+      "repeats": 3,
+      "peak_mem_gib": 1.7311854362487793,
+      "prefill_s_mean": 0.241327801666633,
+      "prefill_s_std": 0.020157868931599692,
+      "decode_ms_per_token_mean": 142.57677607874007,
+      "decode_ms_per_token_std": 3.5334783284177593,
+      "throughput_tok_s_mean": 6.978532996550086,
+      "throughput_tok_s_std": 0.16143521863947563
+    },
+    {
+      "batch_size": 8,
+      "prompt_len": 512,
+      "new_tokens": 128,
+      "repeats": 3,
+      "peak_mem_gib": 2.149667263031006,
+      "prefill_s_mean": 1.1228126450000293,
+      "prefill_s_std": 0.02755758519290032,
+      "decode_ms_per_token_mean": 163.8476568057742,
+      "decode_ms_per_token_std": 0.9029015537849043,
+      "throughput_tok_s_mean": 46.69160876441553,
+      "throughput_tok_s_std": 0.22192779915919747
+    },
+    {
+      "batch_size": 16,
+      "prompt_len": 512,
+      "new_tokens": 128,
+      "repeats": 3,
+      "peak_mem_gib": 2.6174864768981934,
+      "prefill_s_mean": 2.2238395986666624,
+      "prefill_s_std": 0.07146864946228426,
+      "decode_ms_per_token_mean": 187.09205003674535,
+      "decode_ms_per_token_std": 0.3224881494412217,
+      "throughput_tok_s_mean": 78.81620898859364,
+      "throughput_tok_s_std": 0.09875298189914716
+    }
+  ],
+  "quality": {
+    "wikitext2_ppl": 9.70415960525228,
+    "ppl_tokens": 298862,
+    "ppl_windows": 146,
+    "ppl_seqlen": 2048,
+    "arc_easy_acc": 0.74,
+    "arc_easy_acc_norm": 0.74,
+    "arc_easy_n": 500
+  }
+}
