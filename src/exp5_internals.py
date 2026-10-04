@@ -106,7 +106,10 @@ class Attention(nn.Module):
                 raise ValueError("the sdpa path supports a full prefill or a single new token")
             out = F.scaled_dot_product_attention(q, k, v, is_causal=(T > 1))
         else:
-            scores = torch.matmul(q, k.transpose(-1, -2)) * (self.head_dim ** -0.5)
+            # Scale q and k separately (head_dim ** -0.25 each) so that fp16 scores cannot overflow
+            # before the softmax; the product still carries the usual 1 / sqrt(head_dim) factor.
+            s = self.head_dim ** -0.25
+            scores = torch.matmul(q * s, (k * s).transpose(-1, -2))
             q_pos = torch.arange(S - T, S, device=x.device)
             k_pos = torch.arange(S, device=x.device)
             scores = scores.masked_fill(k_pos[None, :] > q_pos[:, None], float("-inf"))
@@ -262,9 +265,19 @@ def eos_set(generation_config):
 
 
 def hf_greedy(hf, ids, n_new, pad_id):
-    """Plain greedy decoding in Hugging Face; the repetition penalty in the instruct config is switched off."""
-    out = hf.generate(ids, max_new_tokens=n_new, do_sample=False, repetition_penalty=1.0, pad_token_id=pad_id)
-    return out[0, ids.shape[1]:].tolist()
+    """Plain greedy decoding in Hugging Face; the repetition penalty in the instruct config is switched off.
+
+    Returns the new tokens and, for every step, the gap between the two largest logits. A tiny gap
+    means a near-tie, where a small numerical difference can flip the chosen token.
+    """
+    out = hf.generate(ids, max_new_tokens=n_new, do_sample=False, repetition_penalty=1.0,
+                      pad_token_id=pad_id, output_scores=True, return_dict_in_generate=True)
+    tokens = out.sequences[0, ids.shape[1]:].tolist()
+    margins = []
+    for step_scores in out.scores:
+        top2 = step_scores[0].float().topk(2).values
+        margins.append((top2[0] - top2[1]).item())
+    return tokens, margins
 
 
 def compare_logits(ref, mine):
@@ -309,13 +322,16 @@ def correctness(mini, impl, ref, eos_ids, n_new, device):
             if i == 0:  # per-layer drift, only for the first prompt, to locate where a mismatch starts
                 entry["layer_max_abs_diff"] = [(a - b.float().cpu()).abs().max().item()
                                                for a, b in zip(item["layers"], layer_outputs)]
+                entry["first_nan_layer"] = next((j for j, v in enumerate(entry["layer_max_abs_diff"]) if v != v), None)
             full = logits[:, -1].float()
             _, past, _ = mini(ids[:, :-1])
             step = mini(ids[:, -1:], past)[0][:, -1].float()
             entry["cache_vs_full_max_abs_diff"] = (full - step).abs().max().item()
         mine_tokens = greedy(mini, ids, n_new, eos_ids)
         entry["greedy_identical"] = mine_tokens == item["gen"]
-        entry["greedy_first_divergence"] = first_divergence(mine_tokens, item["gen"])
+        d = first_divergence(mine_tokens, item["gen"])
+        entry["greedy_first_divergence"] = d
+        entry["ref_margin_at_divergence"] = item["margins"][d] if d is not None and d < len(item["margins"]) else None
         entry["prompt_tokens"] = ids.shape[1]
         prompts.append(entry)
     return {"prompts": prompts}
@@ -392,8 +408,9 @@ def cmd_qwen_verify(args):
             if idx == 0:
                 for h in hooks:
                     h.remove()
+            gen_tokens, margins = hf_greedy(hf, ids, args.new_tokens, pad_id)
             ref.append({"ids": ids.cpu(), "logits": logits, "layers": list(layers_out) if idx == 0 else None,
-                        "gen": hf_greedy(hf, ids, args.new_tokens, pad_id)})
+                        "gen": gen_tokens, "margins": margins})
         hf_bench = None
         if args.bench and dtype_name == "fp16":
             hf_bench = decode_speed(
@@ -410,9 +427,12 @@ def cmd_qwen_verify(args):
         for impl in args.impls:
             entry[impl] = correctness(mini, impl, ref, eos_ids, args.new_tokens, device)
             first = entry[impl]["prompts"][0]
+            plist = entry[impl]["prompts"]
             print(f"  {impl}: max|diff| {first['max_abs_diff']:.2e} (logits up to {first['ref_abs_max']:.1f}), "
                   f"top-1 agreement {first['top1_agreement']:.3f}, greedy identical "
-                  f"{[p['greedy_identical'] for p in entry[impl]['prompts']]}", flush=True)
+                  f"{[p['greedy_identical'] for p in plist]}, first divergence {[p['greedy_first_divergence'] for p in plist]}, "
+                  f"reference top-2 gap there {[None if p['ref_margin_at_divergence'] is None else round(p['ref_margin_at_divergence'], 3) for p in plist]}, "
+                  f"first NaN layer {first.get('first_nan_layer')}", flush=True)
         if args.bench and dtype_name == "fp16":
             bench = {"hf_generate": hf_bench}
             for impl in args.impls:
@@ -480,7 +500,12 @@ def cmd_lora_peft(args):
     base = load_hf(args.model, torch.float32).to(device).eval()
     peft_cfg = LoraConfig(r=rank, lora_alpha=alpha, lora_dropout=0.0, target_modules=TARGETS["all"],
                           bias="none", task_type="CAUSAL_LM")
-    pm = get_peft_model(base, peft_cfg)
+    try:
+        pm = get_peft_model(base, peft_cfg)
+    except ImportError as e:
+        if "torchao" in str(e):
+            raise RuntimeError("PEFT rejects the preinstalled torchao version; run `pip uninstall -y torchao` and retry") from e
+        raise
     copied = 0
     for name, m in pm.named_modules():
         if hasattr(m, "lora_A") and hasattr(m, "lora_B") and "default" in m.lora_A:
