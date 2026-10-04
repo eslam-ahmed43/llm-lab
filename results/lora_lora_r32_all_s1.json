@@ -1,0 +1,60 @@
+{
+  "mode": "lora",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "seed": 1,
+  "lr": 0.0002,
+  "steps": 600,
+  "batch_size": 16,
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "bitsandbytes": "0.50.2"
+  },
+  "load_footprint_gib": 2.875392436981201,
+  "rank": 32,
+  "alpha": 64,
+  "targets": "all",
+  "dropout": 0.05,
+  "lora_modules": 196,
+  "trainable_params": 36929536,
+  "init_max_abs_diff": 0.0,
+  "train": {
+    "seconds": 408.721135709,
+    "tokens_per_s": 1176.6629077445334,
+    "final_loss": 0.15125601697713137,
+    "loss_curve": [
+      1.7623,
+      0.8545,
+      0.7465,
+      0.5957,
+      0.4655,
+      0.4053,
+      0.4027,
+      0.3197,
+      0.3089,
+      0.3077,
+      0.3012,
+      0.2099,
+      0.2502,
+      0.2449,
+      0.2048,
+      0.2306,
+      0.149,
+      0.1366,
+      0.1776,
+      0.2068,
+      0.1142,
+      0.1551,
+      0.1919,
+      0.1106
+    ],
+    "peak_mem_gib": 9.292462348937988
+  },
+  "eval": {
+    "accuracy": 0.9325,
+    "macro_f1": 0.8817849999121335,
+    "n": 2000
+  }
+}

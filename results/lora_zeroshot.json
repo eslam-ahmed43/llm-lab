@@ -1,0 +1,23 @@
+{
+  "mode": "zeroshot",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "seed": 0,
+  "lr": 0.0002,
+  "steps": 600,
+  "batch_size": 16,
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "bitsandbytes": "0.50.2"
+  },
+  "load_footprint_gib": 2.875392436981201,
+  "rank": 0,
+  "trainable_params": 0,
+  "eval": {
+    "accuracy": 0.512,
+    "macro_f1": 0.40005201943396623,
+    "n": 2000
+  }
+}

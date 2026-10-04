@@ -9,6 +9,7 @@ Measured, reproducible experiments on LLM serving and compression, run on one fr
 | **Exp 1: Serving and batching** | How much do batching and the serving engine matter under concurrency? | Done: [REPORT.md](REPORT.md) |
 | **Exp 2: Quantization** | What do INT8 / INT4 cost and buy in memory, latency, throughput and quality? | Done: [REPORT_EXP2.md](REPORT_EXP2.md) |
 | **Exp 3: Prefix caching** | How much does a shared prefix help, and how does it scale with prefix length? | Preliminary: the extreme case (100% shared prompt) is in the Exp 1 report. The shared-prefix-length sweep is planned |
+| **Exp 4: LoRA and QLoRA fine-tuning** | How do rank, adapted layers and a 4-bit base trade accuracy, memory and time? | Done: [REPORT_EXP4.md](REPORT_EXP4.md) |
 
 ## Exp 1 in one table
 
@@ -56,7 +57,28 @@ Qwen2.5-1.5B-Instruct on a T4 with bitsandbytes. Throughput is generated tokens/
 
 ![Quantization overview](plots/quant_overview.png)
 
-## Setup
+## Exp 4 in one table
+
+LoRA written from scratch, Qwen2.5-1.5B-Instruct fine-tuned on 6-way emotion classification, 3 seeds per setup, 600 steps on a T4:
+
+| Setup | Trainable params | Test accuracy (%) | Peak memory (GiB) | Train time (s) |
+|---|---:|---:|---:|---:|
+| No fine-tuning | 0 | 51.2 | - | - |
+| LoRA, attention, rank 8 | 2.2M | 91.18 ± 0.16 | 7.37 | 316 |
+| LoRA, all linear, rank 4 | 4.6M | 92.17 ± 0.10 | 9.07 | 397 |
+| LoRA, all linear, rank 8 | 9.2M | 92.80 ± 0.28 | 9.15 | 395 |
+| LoRA, all linear, rank 32 | 36.9M | 92.85 ± 0.35 | 9.66 | 405 |
+| QLoRA, all linear, rank 8 | 9.2M | 92.78 ± 0.18 | 7.40 | 427 |
+
+- **Fine-tuning takes accuracy from 51% to about 93%** while training under 2.5% of the parameters.
+- **With all linear layers adapted, rank 8 is enough:** ranks 8, 16 and 32 are within 0.15 points of each other, so rank 32 pays 4x the parameters for nothing measurable.
+- **With attention only, rank matters:** accuracy rises from 89.3% to 92.5% between rank 4 and 32.
+- **QLoRA matches LoRA at rank 8** (92.78% against 92.80%) with 19% less peak memory and 8% more training time.
+- Exp 4 ran on a newer Kaggle image (Python 3.13, torch 2.11, transformers 5.16) than Exp 1 and 2; the versions are stored in each result file.
+
+![LoRA overview](plots/lora_overview.png)
+
+## Setup (Exp 1 and 2)
 
 | | |
 |---|---|
@@ -73,12 +95,13 @@ llm-lab/
 ├── README.md
 ├── REPORT.md                  # full Exp 1 report with all tables and caveats
 ├── REPORT_EXP2.md             # full Exp 2 (quantization) report
+├── REPORT_EXP4.md             # full Exp 4 (LoRA / QLoRA) report
 ├── src/
 │   ├── bench_inference.py     # load generator (TTFT, latency, throughput, peak memory)
 │   ├── hf_server.py           # Transformers baseline: one generate() at a time
 │   ├── hf_batched_server.py   # Transformers baseline: static batching
-│   └── quantize.py            # Exp 2: FP16 / INT8 / NF4 study (run + summarize)
-├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, env files
+│   ├── quantize.py            # Exp 2: FP16 / INT8 / NF4 study (run + summarize)
+├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, env files
 ├── plots/
 └── logs/                      # server logs (KV cache size, prefix-cache hit rates)
 ```
@@ -105,6 +128,15 @@ python src/quantize.py run --method fp16 --out results/quant_fp16.json
 python src/quantize.py run --method bnb-int8 --out results/quant_bnb-int8.json
 python src/quantize.py run --method bnb-nf4 --out results/quant_bnb-nf4.json
 python src/quantize.py summarize --results-dir results --out results/quant_summary.csv
+```
+
+## Reproduce Exp 4
+
+```bash
+python src/train_lora.py run --mode lora --rank 8 --targets all --seed 0 --out results/lora_lora_r8_all_s0.json
+python src/train_lora.py run --mode qlora --rank 8 --targets all --seed 0 --out results/lora_qlora_r8_all_s0.json
+python src/train_lora.py summarize --results-dir results --out results/lora_summary.csv
+python src/plot_lora.py --summary results/lora_summary.csv --out plots/lora_overview.png
 ```
 
 ## Known caveats
