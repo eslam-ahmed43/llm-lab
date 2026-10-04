@@ -1,0 +1,29 @@
+{
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "peft": "0.20.0"
+  },
+  "rope_theta": 10000.0,
+  "impls": {
+    "manual": {
+      "max_abs_diff": 1.7881393432617188e-06,
+      "mean_abs_diff": 2.484422907400585e-07,
+      "ref_abs_max": 3.0962042808532715,
+      "top1_agreement": 1.0,
+      "cache_vs_full_max_abs_diff": 1.3113021850585938e-06,
+      "greedy_identical": true
+    },
+    "sdpa": {
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0,
+      "ref_abs_max": 3.0962042808532715,
+      "top1_agreement": 1.0,
+      "cache_vs_full_max_abs_diff": 1.0728836059570312e-06,
+      "greedy_identical": true
+    }
+  },
+  "passed": true
+}

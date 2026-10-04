@@ -75,7 +75,7 @@ For a roughly 1.5B model on a single T4 and a classification task like this one:
 
 - One model, one task, one GPU. The rank-saturation result applies to this training budget (600 steps, about 0.6 epoch) and to a fixed learning rate and `alpha = 2 x rank`. Larger ranks may need a different learning rate or longer training.
 - The test set has 2,000 examples (standard error about 0.6 points) and each configuration has 3 seeds; no significance tests were run.
-- The LoRA implementation is verified by structural checks (zero effect at initialization, parameter counts) but was not compared numerically with the PEFT library.
+- The LoRA implementation is verified by structural checks (zero effect at initialization, parameter counts), and in Exp 5 its forward pass and its merged weights matched PEFT exactly when both used the same adapter weights. The initialization and the training dynamics were not compared with PEFT.
 - Memory and speed numbers belong to this implementation and to this environment (see section 1).
 - Macro-F1 is below accuracy because the classes are imbalanced; we did not analyze per-class results.
 - The environment differs from Exp 1 and 2, so absolute speeds are not comparable across experiments.
@@ -94,6 +94,6 @@ python src/plot_lora.py --summary results/lora_summary.csv --out plots/lora_over
 
 ## 7. What comes next
 
-- Compare the from-scratch LoRA numerically with PEFT, and merge the adapters into the base weights to verify equivalence.
+- Compare the initialization and a short training run of the from-scratch LoRA with PEFT (the forward pass and merging were already checked in Exp 5).
 - Longer training and a learning-rate sweep, to test whether the rank saturation holds with a larger budget.
 - Exp 5: implement an attention block and a small GPT from scratch and compare them with the Hugging Face implementation numerically.

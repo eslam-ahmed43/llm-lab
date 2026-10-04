@@ -1,0 +1,11 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[fp32] Hugging Face reference
+[fp32] own implementation
+  manual: max|diff| 1.65e-05 (logits up to 22.0), top-1 agreement 1.000, greedy identical [True, True, True], first divergence [None, None, None], reference top-2 gap there [None, None, None], first NaN layer None
+  sdpa: max|diff| 2.10e-05 (logits up to 22.0), top-1 agreement 1.000, greedy identical [True, True, True], first divergence [None, None, None], reference top-2 gap there [None, None, None], first NaN layer None
+[fp16] Hugging Face reference
+[fp16] own implementation
+  manual: max|diff| 4.88e-02 (logits up to 22.0), top-1 agreement 1.000, greedy identical [True, False, True], first divergence [None, 33, None], reference top-2 gap there [None, 0.016, None], first NaN layer None
+  sdpa: max|diff| 3.32e-02 (logits up to 22.0), top-1 agreement 1.000, greedy identical [True, False, True], first divergence [None, 33, None], reference top-2 gap there [None, 0.016, None], first NaN layer None
+  bench: {'hf_generate': {'prefill_s': 0.105, 'decode_ms_per_token': 37.045, 'tokens_per_s': 26.613}, 'own_manual': {'prefill_s': 0.102, 'decode_ms_per_token': 33.005, 'tokens_per_s': 29.81}, 'own_sdpa': {'prefill_s': 0.087, 'decode_ms_per_token': 27.441, 'tokens_per_s': 35.837}}
+saved /kaggle/working/llm-lab/results/internals_qwen_verify.json

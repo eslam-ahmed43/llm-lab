@@ -1,0 +1,48 @@
+{
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "peft": "0.20.0"
+  },
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "rank": 8,
+  "alpha": 16,
+  "dtype": "fp32",
+  "adapted_modules_own": 196,
+  "adapted_modules_peft": 196,
+  "trainable_params_own": 9232384,
+  "trainable_params_peft": 9232384,
+  "merged_modules_own": 196,
+  "base_vs_adapted": {
+    "max_abs_diff": 8.539568901062012,
+    "mean_abs_diff": 0.43185678124427795,
+    "ref_abs_max": 31.020727157592773,
+    "top1_agreement": 0.9090909361839294
+  },
+  "own_vs_peft": {
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ref_abs_max": 30.580331802368164,
+    "top1_agreement": 1.0
+  },
+  "own_unmerged_vs_merged": {
+    "max_abs_diff": 9.012222290039062e-05,
+    "mean_abs_diff": 4.394586994749261e-06,
+    "ref_abs_max": 30.580331802368164,
+    "top1_agreement": 1.0
+  },
+  "peft_unmerged_vs_merged": {
+    "max_abs_diff": 9.012222290039062e-05,
+    "mean_abs_diff": 4.394586994749261e-06,
+    "ref_abs_max": 30.580331802368164,
+    "top1_agreement": 1.0
+  },
+  "own_merged_vs_peft_merged": {
+    "max_abs_diff": 0.0,
+    "mean_abs_diff": 0.0,
+    "ref_abs_max": 30.58033561706543,
+    "top1_agreement": 1.0
+  }
+}

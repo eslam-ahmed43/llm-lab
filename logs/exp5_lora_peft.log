@@ -1,0 +1,10 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+own LoRA
+PEFT
+  base_vs_adapted: max|diff| 8.54e+00, top-1 agreement 0.909
+  own_vs_peft: max|diff| 0.00e+00, top-1 agreement 1.000
+  own_unmerged_vs_merged: max|diff| 9.01e-05, top-1 agreement 1.000
+  peft_unmerged_vs_merged: max|diff| 9.01e-05, top-1 agreement 1.000
+  own_merged_vs_peft_merged: max|diff| 0.00e+00, top-1 agreement 1.000
+  trainable params: own 9,232,384 vs PEFT 9,232,384
+saved /kaggle/working/llm-lab/results/internals_lora_peft.json

@@ -1,6 +1,6 @@
 # llm-lab: LLM inference experiments on a single T4
 
-Measured, reproducible experiments on LLM serving and compression, run on one free Kaggle **Tesla T4 (15 GiB)** with **Qwen2.5-1.5B-Instruct** in fp16. Every number in the reports traces back to a raw result file and a script in this repo.
+Measured, reproducible experiments on LLM serving, compression, fine-tuning and model internals, run on one free Kaggle **Tesla T4 (15 GiB)** with **Qwen2.5-1.5B-Instruct** in fp16. Every number in the reports traces back to a raw result file and a script in this repo.
 
 ## Status
 
@@ -10,6 +10,7 @@ Measured, reproducible experiments on LLM serving and compression, run on one fr
 | **Exp 2: Quantization** | What do INT8 / INT4 cost and buy in memory, latency, throughput and quality? | Done: [REPORT_EXP2.md](REPORT_EXP2.md) |
 | **Exp 3: Prefix caching** | How much does a shared prefix help, and how does it scale with prefix length? | Preliminary: the extreme case (100% shared prompt) is in the Exp 1 report. The shared-prefix-length sweep is planned |
 | **Exp 4: LoRA and QLoRA fine-tuning** | How do rank, adapted layers and a 4-bit base trade accuracy, memory and time? | Done: [REPORT_EXP4.md](REPORT_EXP4.md) |
+| **Exp 5: Transformer internals** | Does a from-scratch decoder match Hugging Face, and does our LoRA match PEFT? | Done: [REPORT_EXP5.md](REPORT_EXP5.md) |
 
 ## Exp 1 in one table
 
@@ -78,6 +79,24 @@ LoRA written from scratch, Qwen2.5-1.5B-Instruct fine-tuned on 6-way emotion cla
 
 ![LoRA overview](plots/lora_overview.png)
 
+## Exp 5 in one table
+
+A Qwen2-style decoder written from scratch in PyTorch (RMSNorm, rotary embeddings, grouped-query attention, SwiGLU, KV cache), loaded with the real Qwen2.5-1.5B weights and compared with Hugging Face on a T4:
+
+| | Max abs logit difference | Greedy outputs identical (3 prompts, 48 tokens) | Decode (ms per token) |
+|---|---:|---:|---:|
+| fp32, manual attention | 1.65e-05 | 3 of 3 | - |
+| fp32, fused attention | 2.10e-05 | 3 of 3 | - |
+| fp16, manual attention | 4.88e-02 | 2 of 3 | 33.0 |
+| fp16, fused attention | 3.32e-02 | 2 of 3 | 27.4 |
+| Hugging Face `generate` (fp16) | reference | reference | 37.0 |
+
+- **In fp32 the from-scratch model matches Hugging Face to rounding error** (about 1e-6 relative), layer by layer.
+- **In fp16 one prompt diverges at token 33,** where the reference's two best logits are only 0.016 apart, consistent with a near-tie flipped by rounding.
+- **A real bug was caught:** the first manual attention returned NaN in fp16 because the scores overflowed; scaling q and k separately fixed it.
+- **The plain decode loop is 1.35x faster than `generate`** for a single stream (batch of one only), which quantifies the framework overhead.
+- **The LoRA layer from Exp 4 gives exactly the same logits as PEFT** with identical weights, and merging adapters into the weights matches (difference 9e-05, rounding).
+
 ## Setup (Exp 1 and 2)
 
 | | |
@@ -96,12 +115,16 @@ llm-lab/
 ├── REPORT.md                  # full Exp 1 report with all tables and caveats
 ├── REPORT_EXP2.md             # full Exp 2 (quantization) report
 ├── REPORT_EXP4.md             # full Exp 4 (LoRA / QLoRA) report
+├── REPORT_EXP5.md             # full Exp 5 (transformer internals) report
 ├── src/
 │   ├── bench_inference.py     # load generator (TTFT, latency, throughput, peak memory)
 │   ├── hf_server.py           # Transformers baseline: one generate() at a time
 │   ├── hf_batched_server.py   # Transformers baseline: static batching
 │   ├── quantize.py            # Exp 2: FP16 / INT8 / NF4 study (run + summarize)
-├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, env files
+│   ├── train_lora.py          # Exp 4: LoRA / QLoRA from scratch (run + summarize)
+│   ├── plot_lora.py           # Exp 4 figure from results/lora_summary.csv
+│   └── exp5_internals.py      # Exp 5: from-scratch Qwen2 vs Hugging Face, LoRA vs PEFT
+├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, internals_*.json, env files
 ├── plots/
 └── logs/                      # server logs (KV cache size, prefix-cache hit rates)
 ```
@@ -137,6 +160,14 @@ python src/train_lora.py run --mode lora --rank 8 --targets all --seed 0 --out r
 python src/train_lora.py run --mode qlora --rank 8 --targets all --seed 0 --out results/lora_qlora_r8_all_s0.json
 python src/train_lora.py summarize --results-dir results --out results/lora_summary.csv
 python src/plot_lora.py --summary results/lora_summary.csv --out plots/lora_overview.png
+```
+
+## Reproduce Exp 5
+
+```bash
+python src/exp5_internals.py selftest --out results/internals_selftest.json
+python src/exp5_internals.py qwen-verify --dtypes fp32 fp16 --bench --out results/internals_qwen_verify.json
+python src/exp5_internals.py lora-peft --rank 8 --out results/internals_lora_peft.json
 ```
 
 ## Known caveats
