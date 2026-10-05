@@ -110,7 +110,7 @@ Batched throughput is identical at concurrency 16 and 64 (372 and 373 tok/s at 1
 At concurrency 64, vLLM is 3.8x / 3.2x / 2.1x faster than static batching for 128 / 512 / 2048-token prompts, and 53x / 23x / 4.9x faster than the naive server. Three effects are visible in the data:
 
 - **Continuous batching removes the batch cap and the wait for the slowest sequence.** vLLM keeps scaling past 16 concurrent requests (27x throughput from concurrency 1 to 64 at 128 tokens) and its TTFT stays at 0.816 s instead of 16.8 s.
-- **Lower per-step overhead.** At concurrency 1 and 128-token prompts vLLM generates 53 tok/s against 27 for Transformers. We did not isolate the cause; CUDA graph capture and a leaner scheduling loop are the likely contributors, and this is a hypothesis, not a measurement.
+- **Lower per-step overhead.** At concurrency 1 and 128-token prompts vLLM generates 53 tok/s against 27 for Transformers. We did not isolate the cause here. Exp 6 later measured part of it (see `REPORT_EXP6.md`): in a plain eager loop the GPU sits idle for roughly 30% of each step waiting for kernel launches, and CUDA graphs recover part of that.
 - **Memory is managed per token, not per padded batch.** `hf_batched` reached 12.6 GiB (an allocator high-water mark) at 2048-token prompts with a batch of 16, close to the 15 GiB device limit, so a larger batch would likely run out of memory. vLLM's KV cache of 8.67 GiB holds 324,704 tokens (about 79 concurrent requests of 4096 tokens, as reported in its startup log).
 
 ### 3.3 Long prompts make the T4 prefill-bound

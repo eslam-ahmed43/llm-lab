@@ -1,0 +1,131 @@
+{
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "peft": "0.20.0"
+  },
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "prompt_len": 512,
+  "new_tokens": 128,
+  "repeats": 5,
+  "check_fp32": {
+    "dynamic_nosync": true,
+    "static_eager": true,
+    "static_graph": true
+  },
+  "memory_floor": {
+    "weights_gb": 3.087428608,
+    "copy_bandwidth_gb_s": 242.77803038694944,
+    "weights_floor_ms_per_step": 12.71708400912196
+  },
+  "bench_fp16": {
+    "dynamic_eager_sync": {
+      "ms_per_step": 27.12423138425197,
+      "ms_per_step_std": 0.6078763584775604,
+      "enqueue_ms_per_step": 27.12361186299223,
+      "tokens_per_s": 36.86740412414373,
+      "speedup_vs_dynamic_eager_sync": 1.0
+    },
+    "dynamic_eager_nosync": {
+      "ms_per_step": 24.51509459685044,
+      "ms_per_step_std": 0.28839494822135936,
+      "enqueue_ms_per_step": 24.49823396220469,
+      "tokens_per_s": 40.791194830978725,
+      "speedup_vs_dynamic_eager_sync": 1.1064298070355698
+    },
+    "static_eager_nosync": {
+      "ms_per_step": 25.08267786456698,
+      "ms_per_step_std": 0.1538763755111612,
+      "enqueue_ms_per_step": 25.065407768504,
+      "tokens_per_s": 39.86815145493891,
+      "speedup_vs_dynamic_eager_sync": 1.0813929649261649
+    },
+    "static_cuda_graph": {
+      "ms_per_step": 21.222308036220426,
+      "ms_per_step_std": 0.14673063670069716,
+      "enqueue_ms_per_step": 20.263063395275562,
+      "tokens_per_s": 47.120228313211044,
+      "speedup_vs_dynamic_eager_sync": 1.2780999756463174
+    }
+  },
+  "profile_fp16": {
+    "dynamic_eager_nosync": {
+      "device_events_per_step": 1312.0333333333333,
+      "device_busy_ms_per_step": 17.51790653333314,
+      "top_device_ops_ms_per_step": [
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, fals",
+          7.2516
+        ],
+        [
+          "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __h",
+          3.4627
+        ],
+        [
+          "std::enable_if<true, void>::type internal::gemvx::kernel<int, int, __half, __half, __half,",
+          2.241
+        ],
+        [
+          "fmha_cutlassF_f16_aligned_32x128_rf_sm75(PyTorchMemEffAttention::AttentionKernel<cutlass::",
+          0.9862
+        ],
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, true",
+          0.6413
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.5675
+        ],
+        [
+          "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<flo",
+          0.2851
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.2681
+        ]
+      ]
+    },
+    "static_cuda_graph": {
+      "device_events_per_step": 1400.0333333333333,
+      "device_busy_ms_per_step": 21.583619433333126,
+      "top_device_ops_ms_per_step": [
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, fals",
+          7.587
+        ],
+        [
+          "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __h",
+          3.7042
+        ],
+        [
+          "std::enable_if<true, void>::type internal::gemvx::kernel<int, int, __half, __half, __half,",
+          2.362
+        ],
+        [
+          "fmha_cutlassF_f16_aligned_32x128_rf_sm75(PyTorchMemEffAttention::AttentionKernel<cutlass::",
+          1.7916
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          1.1301
+        ],
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, true",
+          0.7296
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.5038
+        ],
+        [
+          "void at::native::vectorized_elementwise_kernel<4, at::native::float16_copy_kernel_cuda(at:",
+          0.4685
+        ]
+      ]
+    }
+  }
+}

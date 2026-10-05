@@ -11,6 +11,7 @@ Measured, reproducible experiments on LLM serving, compression, fine-tuning and 
 | **Exp 3: Prefix caching** | How much does a shared prefix help, and how does it scale with prefix length? | Preliminary: the extreme case (100% shared prompt) is in the Exp 1 report. The shared-prefix-length sweep is planned |
 | **Exp 4: LoRA and QLoRA fine-tuning** | How do rank, adapted layers and a 4-bit base trade accuracy, memory and time? | Done: [REPORT_EXP4.md](REPORT_EXP4.md) |
 | **Exp 5: Transformer internals** | Does a from-scratch decoder match Hugging Face, and does our LoRA match PEFT? | Done: [REPORT_EXP5.md](REPORT_EXP5.md) |
+| **Exp 6: Decode profiling** | Where does single-stream decode time go, and do CUDA graphs remove the overhead? | Done: [REPORT_EXP6.md](REPORT_EXP6.md) |
 
 ## Exp 1 in one table
 
@@ -97,6 +98,24 @@ A Qwen2-style decoder written from scratch in PyTorch (RMSNorm, rotary embedding
 - **The plain decode loop is 1.35x faster than `generate`** for a single stream (batch of one only), which quantifies the framework overhead.
 - **The LoRA layer from Exp 4 gives exactly the same logits as PEFT** with identical weights, and merging adapters into the weights matches (difference 9e-05, rounding).
 
+## Exp 6 in one table
+
+The decode step of the from-scratch model of Exp 5 (fp16, batch of one, T4), run four ways and profiled:
+
+| Variant | Step time (ms) | CPU time to enqueue a step (ms) |
+|---|---:|---:|
+| Eager, growing cache, host sync per token | 27.1 | 27.1 |
+| Eager, growing cache, no host sync | 24.5 | 24.5 |
+| Eager, preallocated cache | 25.1 | 25.1 |
+| Preallocated cache + CUDA graph | 21.2 | 20.3 |
+
+- **The eager loop is CPU-bound:** enqueueing takes as long as the step, and the GPU is busy for only 17.5 of 24.5 ms (71%).
+- **CUDA graphs make the step 1.28x faster** than the Exp 5 loop and GPU-bound.
+- **The GPU work is mostly streaming weights:** the three largest kernels take 12.95 ms against 12.7 ms to read the weights once at the measured 243 GB/s.
+- **Budget:** about 20 of Hugging Face's 37 ms per token is not GPU work, and vLLM's step (derived from Exp 1) is close to the GPU-work level.
+
+![Decode time budget](plots/decode_budget.png)
+
 ## Setup (Exp 1 and 2)
 
 | | |
@@ -116,6 +135,7 @@ llm-lab/
 ├── REPORT_EXP2.md             # full Exp 2 (quantization) report
 ├── REPORT_EXP4.md             # full Exp 4 (LoRA / QLoRA) report
 ├── REPORT_EXP5.md             # full Exp 5 (transformer internals) report
+├── REPORT_EXP6.md             # full Exp 6 (decode profiling) report
 ├── src/
 │   ├── bench_inference.py     # load generator (TTFT, latency, throughput, peak memory)
 │   ├── hf_server.py           # Transformers baseline: one generate() at a time
@@ -123,8 +143,10 @@ llm-lab/
 │   ├── quantize.py            # Exp 2: FP16 / INT8 / NF4 study (run + summarize)
 │   ├── train_lora.py          # Exp 4: LoRA / QLoRA from scratch (run + summarize)
 │   ├── plot_lora.py           # Exp 4 figure from results/lora_summary.csv
-│   └── exp5_internals.py      # Exp 5: from-scratch Qwen2 vs Hugging Face, LoRA vs PEFT
-├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, internals_*.json, env files
+│   ├── exp5_internals.py      # Exp 5: from-scratch Qwen2 vs Hugging Face, LoRA vs PEFT
+│   ├── exp6_profiling.py      # Exp 6: decode step overhead, CUDA graphs, profiler
+│   └── plot_exp6.py           # Exp 6 figure from the results of Exp 1, 5 and 6
+├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, internals_*.json, profiling_exp6.json, env files
 ├── plots/
 └── logs/                      # server logs (KV cache size, prefix-cache hit rates)
 ```
@@ -168,6 +190,13 @@ python src/plot_lora.py --summary results/lora_summary.csv --out plots/lora_over
 python src/exp5_internals.py selftest --out results/internals_selftest.json
 python src/exp5_internals.py qwen-verify --dtypes fp32 fp16 --bench --out results/internals_qwen_verify.json
 python src/exp5_internals.py lora-peft --rank 8 --out results/internals_lora_peft.json
+```
+
+## Reproduce Exp 6
+
+```bash
+python src/exp6_profiling.py run --check --bench --profile --repeats 5 --out results/profiling_exp6.json
+python src/plot_exp6.py --results results --out plots/decode_budget.png
 ```
 
 ## Known caveats

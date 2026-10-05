@@ -77,7 +77,7 @@ The first version of the manual attention computed `(q kᵀ) x scale` and return
 
 ### 3.4 What the speed comparison shows
 
-On this T4, the plain loop decodes at 27.4 ms per token, 1.35x faster than Hugging Face `generate` (37.0 ms), and prefill is 1.21x faster. The own implementation handles only a batch of one with no padding, sampling or stopping criteria, so this is not a claim that it is better. It measures what the generic machinery (logits processing, cache management, per-step bookkeeping) costs when the model is small: about 9.6 ms per token out of 37.0. Hugging Face `generate` here runs at 26.6 tokens/s, in line with the naive Transformers server in Exp 1 (26.8 tokens/s), and vLLM reached 53 tokens/s at concurrency 1 there. A large part of the single-stream gap between those systems is therefore overhead rather than GPU work. What accounts for the rest of vLLM's lead (CUDA graphs are the obvious candidate) was not tested. The fused attention is faster than the manual path (33.0 against 27.4 ms), probably because it replaces several small kernels and intermediate tensors with one, but that is a hypothesis.
+On this T4, the plain loop decodes at 27.4 ms per token, 1.35x faster than Hugging Face `generate` (37.0 ms), and prefill is 1.21x faster. The own implementation handles only a batch of one with no padding, sampling or stopping criteria, so this is not a claim that it is better. It measures what the generic machinery (logits processing, cache management, per-step bookkeeping) costs when the model is small: about 9.6 ms per token out of 37.0. Hugging Face `generate` here runs at 26.6 tokens/s, in line with the naive Transformers server in Exp 1 (26.8 tokens/s), and vLLM reached 53 tokens/s at concurrency 1 there. A large part of the single-stream gap between those systems is therefore overhead rather than GPU work. Exp 6 tests the remaining candidates (kernel-launch gaps and CUDA graphs) and finds that about half of Hugging Face's per-token time is CPU-side overhead; see `REPORT_EXP6.md`. The fused attention is faster than the manual path (33.0 against 27.4 ms), probably because it replaces several small kernels and intermediate tensors with one, but that is a hypothesis.
 
 ### 3.5 The LoRA layer from Exp 4 matches PEFT
 
@@ -106,4 +106,4 @@ python src/exp5_internals.py lora-peft --rank 8 --out results/internals_lora_pef
 
 - Train a small GPT from scratch with the same building blocks, to cover the training side of the transformer.
 - Compare the initialization and a short training run of the own LoRA with PEFT, not only the forward pass.
-- Profile the single-stream decode step (kernel launches, attention) on the T4 to test the overhead and fused-attention explanations.
+- Done in Exp 6: profiling of the single-stream decode step. Still open: why the fused attention path is faster than the manual one.
