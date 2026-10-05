@@ -199,6 +199,22 @@ def profile_decode(setup, run, steps):
         return {"error": repr(exc)}
 
 
+def measure_bandwidth(device, size_mib=1024, repeats=20):
+    """Achievable device memory bandwidth in GB/s, from a large device-to-device copy (reads plus writes)."""
+    src = torch.ones(size_mib * 1024 * 1024 // 2, dtype=torch.float16, device=device)
+    dst = torch.empty_like(src)
+    for _ in range(3):
+        dst.copy_(src)
+    torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    for _ in range(repeats):
+        dst.copy_(src)
+    torch.cuda.synchronize()
+    seconds = time.perf_counter() - t0
+    moved = 2 * src.numel() * src.element_size() * repeats  # every copy reads and writes the buffer once
+    return moved / seconds / 1e9
+
+
 def equivalence(mini, ids, n_new, dtype, device, use_graph):
     """All variants must generate the same tokens as the plain greedy loop."""
     steps = n_new - 1
@@ -310,6 +326,13 @@ def cmd_run(args):
             }
 
             if args.bench:
+                # Lower bound for one decode step: streaming all weights once at the measured bandwidth
+                weights_bytes = sum(p.numel() * p.element_size() for p in mini.parameters())
+                bandwidth = measure_bandwidth(device)
+                report["memory_floor"] = {"weights_gb": weights_bytes / 1e9, "copy_bandwidth_gb_s": bandwidth,
+                                          "weights_floor_ms_per_step": weights_bytes / (bandwidth * 1e9) * 1000}
+                print(f"  weights {weights_bytes / 1e9:.2f} GB, measured copy bandwidth {bandwidth:.0f} GB/s, "
+                      f"so streaming the weights once takes at least {report['memory_floor']['weights_floor_ms_per_step']:.1f} ms", flush=True)
                 bench = {}
                 for name, (setup, run) in variants.items():
                     bench[name] = time_decode(setup, run, steps, args.repeats)
