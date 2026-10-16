@@ -14,6 +14,10 @@ Examples:
   python exp7_launch_model.py --model Qwen/Qwen2.5-0.5B-Instruct --check --out results/launch_0p5b.json
   python exp7_launch_model.py --model Qwen/Qwen2.5-1.5B-Instruct --out results/launch_1p5b.json
   python exp7_launch_model.py --model Qwen/Qwen2.5-3B-Instruct --out results/launch_3b.json
+  python exp7_launch_model.py --model Qwen/Qwen2.5-3B-Instruct --dtype fp32 --out results/launch7b_3b_fp32.json
+
+With --dtype fp32 the weights are stored and read in 32 bits, which doubles the bytes streamed per token and
+moves the GPU time up without changing the number of layers or operations (used to reach the GPU-bound regime).
 """
 import argparse
 import json
@@ -29,8 +33,8 @@ from exp6_profiling import (  # noqa: E402
     make_static_cache, measure_bandwidth, prefill, profile_decode, static_decode_step, time_decode)
 
 
-def build(model_id, cfg, dtype, device):
-    hf = load_hf(model_id, dtype)
+def build(model_id, cfg, dtype, device, load_dtype=None):
+    hf = load_hf(model_id, load_dtype or dtype)
     n_params = sum(p.numel() for p in hf.parameters())  # a tied output head is counted once
     mini = build_mini(cfg, hf.state_dict(), dtype, device)
     mini.set_attention("sdpa")
@@ -44,6 +48,7 @@ def main():
     ap.add_argument("--new-tokens", type=int, default=128)
     ap.add_argument("--repeats", type=int, default=5)
     ap.add_argument("--check", action="store_true", help="fp32 equivalence of the decode variants (use for a small model)")
+    ap.add_argument("--dtype", choices=["fp16", "fp32"], default="fp16", help="precision of the timed model")
     ap.add_argument("--no-profile", action="store_true")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
@@ -52,7 +57,7 @@ def main():
     device = "cuda"
     tok = AutoTokenizer.from_pretrained(args.model)
     cfg = AutoConfig.from_pretrained(args.model)
-    report = {"env": env_info(), "model": args.model, "layers": cfg.num_hidden_layers,
+    report = {"env": env_info(), "model": args.model, "dtype": args.dtype, "layers": cfg.num_hidden_layers,
               "hidden_size": cfg.hidden_size, "prompt_len": args.prompt_len,
               "new_tokens": args.new_tokens, "repeats": args.repeats}
 
@@ -71,11 +76,12 @@ def main():
                 print("EQUIVALENCE FAILED")
                 sys.exit(1)
 
-        print(f"[fp16] building {args.model}", flush=True)
-        dtype = torch.float16
-        mini, n_params = build(args.model, cfg, dtype, device)
+        print(f"[{args.dtype}] building {args.model}", flush=True)
+        dtype = torch.float32 if args.dtype == "fp32" else torch.float16
+        bandwidth = measure_bandwidth(device)  # before the weights are loaded, so the test buffers fit
+        torch.cuda.empty_cache()
+        mini, n_params = build(args.model, cfg, dtype, device, load_dtype=torch.float16)
         weights_bytes = sum(p.numel() * p.element_size() for p in mini.parameters())
-        bandwidth = measure_bandwidth(device)
         report.update({"params": n_params, "weights_bytes": weights_bytes, "bandwidth_gb_s": bandwidth,
                        "floor_ms": weights_bytes / (bandwidth * 1e9) * 1000})
         print(f"  {n_params / 1e9:.2f}B parameters, {cfg.num_hidden_layers} layers, weights {weights_bytes / 1e9:.2f} GB, "
@@ -107,14 +113,14 @@ def main():
             "static_cuda_graph": (setup_graph, lambda n: decoder.run(state["first"], prompt_len, n)),
         }
 
-        # fp16 sanity: the static step and the dynamic step must give almost the same logits
+        # sanity: the static step and the dynamic step must give almost the same logits
         first, past = prefill(mini, ids)
         dynamic_logits = mini(first, past)[0][:, -1].float()
         fill_static_cache(caches, past)
         pos = torch.tensor([prompt_len], dtype=torch.long, device=device)
         static_logits = static_decode_step(mini, first, pos, caches)[:, -1].float()
-        report["fp16_first_step_logit_diff"] = (dynamic_logits - static_logits).abs().max().item()
-        report["fp16_first_step_logit_max"] = dynamic_logits.abs().max().item()
+        report["first_step_logit_diff"] = (dynamic_logits - static_logits).abs().max().item()
+        report["first_step_logit_max"] = dynamic_logits.abs().max().item()
 
         bench = {}
         for name, (setup, run) in variants.items():
