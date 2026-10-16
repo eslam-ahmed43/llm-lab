@@ -1,0 +1,14 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[check] fp32 equivalence of the decode variants
+   {'dynamic_nosync': True, 'static_eager': True, 'static_graph': True}
+[fp16] building Qwen/Qwen2.5-0.5B-Instruct
+  0.49B parameters, 24 layers, weights 0.99 GB, bandwidth 241 GB/s, weight-streaming floor 4.1 ms
+  dynamic_eager_nosync: 25.82 ms/step (enqueue alone 25.82 ms)
+  static_eager_nosync: 26.05 ms/step (enqueue alone 26.04 ms)
+  static_cuda_graph: 9.48 ms/step (enqueue alone 8.98 ms)
+/usr/local/lib/python3.13/dist-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+  profile dynamic_eager_nosync: 1128 device operations per step, GPU busy 8.04 ms
+  profile static_eager_nosync: 1202 device operations per step, GPU busy 15.52 ms
+  profile static_cuda_graph: 1204 device operations per step, GPU busy 12.42 ms
+saved /kaggle/working/llm-lab/results/launch_smoke.json

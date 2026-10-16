@@ -1,0 +1,10 @@
+fitted on Qwen/Qwen2.5-1.5B-Instruct: c_layer 272 us, 49.9 operations per layer, t_launch 21.6 us per operation
+
+model                        meas eager    pred   err%   meas graph    pred   err%   speedup meas/pred  regime meas/pred
+Qwen/Qwen2.5-0.5B-Instruct        25.43   25.88   +1.8         9.72   10.64   +9.4      2.61 /  2.43  CPU-bound / CPU-bound
+Qwen/Qwen2.5-1.5B-Instruct        30.20   30.20   +0.0        20.43   20.43   +0.0      1.48 /  1.48  CPU-bound / CPU-bound  (fit)
+Qwen/Qwen2.5-3B-Instruct          38.71   38.83   +0.3        35.41   35.41   -0.0      1.09 /  1.10  CPU-bound / CPU-bound
+
+baselines, error of the eager step (%): Qwen2.5-0.5B-Instruct bandwidth-only -62, layers-only +2; Qwen2.5-3B-Instruct bandwidth-only +56, layers-only +0
+
+saved /kaggle/working/llm-lab/results/launch_model_fit.json and /kaggle/working/llm-lab/plots/launch_model.png

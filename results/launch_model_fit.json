@@ -1,0 +1,124 @@
+{
+  "reference": "Qwen/Qwen2.5-1.5B-Instruct",
+  "fit": {
+    "bandwidth_bytes_per_s": 241089252117.1676,
+    "c_layer_ms": 0.27245184166663355,
+    "ops_per_layer": 49.92857142857143,
+    "t_launch_ms": 0.021601284060468885,
+    "reference_is_cpu_bound": true,
+    "reference_floor_ms": 12.806164442782928
+  },
+  "rows": [
+    {
+      "model": "Qwen/Qwen2.5-0.5B-Instruct",
+      "params_b": 0.494032768,
+      "layers": 24,
+      "is_reference": false,
+      "predicted": {
+        "gpu_ms": 10.637183413892522,
+        "cpu_ms": 25.88451009988757,
+        "eager_ms": 25.88451009988757,
+        "graph_ms": 10.637183413892522,
+        "speedup": 2.4333988700506493,
+        "regime": "CPU-bound"
+      },
+      "measured": {
+        "eager_ms": 25.426731171653607,
+        "graph_ms": 9.724486809448814,
+        "speedup": 2.614711878363358,
+        "eager_cpu_bound": true,
+        "gpu_busy_fraction_eager": 0.5397780538132135,
+        "regime": "CPU-bound"
+      },
+      "error_pct": {
+        "eager": 1.8003845053598866,
+        "graph": 9.385550336259229
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": -61.99112326329666,
+          "graph": -32.74991037673275
+        },
+        "layers_only": {
+          "eager": 1.8003845053598866,
+          "graph": 80.11805581872358
+        }
+      },
+      "regime_correct": true
+    },
+    {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "params_b": 1.543714304,
+      "layers": 28,
+      "is_reference": true,
+      "predicted": {
+        "gpu_ms": 20.434816009448667,
+        "cpu_ms": 30.1985951165355,
+        "eager_ms": 30.1985951165355,
+        "graph_ms": 20.434816009448667,
+        "speedup": 1.4778011753358704,
+        "regime": "CPU-bound"
+      },
+      "measured": {
+        "eager_ms": 30.1985951165355,
+        "graph_ms": 20.434816009448667,
+        "speedup": 1.4778011753358704,
+        "eager_cpu_bound": true,
+        "gpu_busy_fraction_eager": 0.6788547774343678,
+        "regime": "CPU-bound"
+      },
+      "error_pct": {
+        "eager": 0.0,
+        "graph": 0.0
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": 0.0,
+          "graph": 0.0
+        },
+        "layers_only": {
+          "eager": 0.0,
+          "graph": 0.0
+        }
+      },
+      "regime_correct": true
+    },
+    {
+      "model": "Qwen/Qwen2.5-3B-Instruct",
+      "params_b": 3.085938688,
+      "layers": 36,
+      "is_reference": false,
+      "predicted": {
+        "gpu_ms": 35.408235281612775,
+        "cpu_ms": 38.82676514983136,
+        "eager_ms": 38.82676514983136,
+        "graph_ms": 35.408235281612775,
+        "speedup": 1.0965461803173737,
+        "regime": "CPU-bound"
+      },
+      "measured": {
+        "eager_ms": 38.70675885826804,
+        "graph_ms": 35.413076069291286,
+        "speedup": 1.0930075315268333,
+        "eager_cpu_bound": true,
+        "gpu_busy_fraction_eager": 0.8055382811609333,
+        "regime": "CPU-bound"
+      },
+      "error_pct": {
+        "eager": 0.31003962900315596,
+        "graph": -0.013669492221002333
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": 55.962539253325325,
+          "graph": 15.352615010060756
+        },
+        "layers_only": {
+          "eager": 0.31003962900315596,
+          "graph": -25.808944645522438
+        }
+      },
+      "regime_correct": true
+    }
+  ]
+}

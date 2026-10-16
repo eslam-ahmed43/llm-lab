@@ -1,0 +1,12 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[fp16] building Qwen/Qwen2.5-1.5B-Instruct
+  1.54B parameters, 28 layers, weights 3.09 GB, bandwidth 241 GB/s, weight-streaming floor 12.8 ms
+  dynamic_eager_nosync: 29.46 ms/step (enqueue alone 29.45 ms)
+  static_eager_nosync: 30.20 ms/step (enqueue alone 30.18 ms)
+  static_cuda_graph: 20.43 ms/step (enqueue alone 19.51 ms)
+/usr/local/lib/python3.13/dist-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+  profile dynamic_eager_nosync: 1312 device operations per step, GPU busy 17.06 ms
+  profile static_eager_nosync: 1398 device operations per step, GPU busy 20.50 ms
+  profile static_cuda_graph: 1400 device operations per step, GPU busy 21.10 ms
+saved /kaggle/working/llm-lab/results/launch_1p5b.json

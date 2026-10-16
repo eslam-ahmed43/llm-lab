@@ -1,0 +1,162 @@
+{
+  "env": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "gpu": "Tesla T4",
+    "peft": "0.20.0"
+  },
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "layers": 24,
+  "hidden_size": 896,
+  "prompt_len": 512,
+  "new_tokens": 128,
+  "repeats": 5,
+  "check_fp32": {
+    "dynamic_nosync": true,
+    "static_eager": true,
+    "static_graph": true
+  },
+  "params": 494032768,
+  "weights_bytes": 988065536,
+  "bandwidth_gb_s": 241.60181456438534,
+  "floor_ms": 4.089644516045995,
+  "fp16_first_step_logit_diff": 0.0,
+  "fp16_first_step_logit_max": 27.34375,
+  "bench": {
+    "dynamic_eager_nosync": {
+      "ms_per_step": 24.73209603622058,
+      "ms_per_step_std": 0.20281472415429555,
+      "enqueue_ms_per_step": 24.724878423621952,
+      "tokens_per_s": 40.43328954147206
+    },
+    "static_eager_nosync": {
+      "ms_per_step": 25.426731171653607,
+      "ms_per_step_std": 0.2285615864907986,
+      "enqueue_ms_per_step": 25.418557874015786,
+      "tokens_per_s": 39.32868890024002
+    },
+    "static_cuda_graph": {
+      "ms_per_step": 9.724486809448814,
+      "ms_per_step_std": 0.01354828915342443,
+      "enqueue_ms_per_step": 9.211170829921254,
+      "tokens_per_s": 102.83319002791471
+    }
+  },
+  "profile": {
+    "dynamic_eager_nosync": {
+      "device_events_per_step": 1128.0333333333333,
+      "device_busy_ms_per_step": 8.038570400000067,
+      "top_device_ops_ms_per_step": [
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, fals",
+          2.3477
+        ],
+        [
+          "std::enable_if<true, void>::type internal::gemvx::kernel<int, int, __half, __half, __half,",
+          1.3323
+        ],
+        [
+          "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __h",
+          0.911
+        ],
+        [
+          "fmha_cutlassF_f16_aligned_64x64_rf_sm75(PyTorchMemEffAttention::AttentionKernel<cutlass::h",
+          0.8911
+        ],
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, true",
+          0.4817
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.2916
+        ],
+        [
+          "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<flo",
+          0.2176
+        ],
+        [
+          "void at::native::vectorized_elementwise_kernel<4, at::native::float16_copy_kernel_cuda(at:",
+          0.204
+        ]
+      ]
+    },
+    "static_eager_nosync": {
+      "device_events_per_step": 1202.0,
+      "device_busy_ms_per_step": 13.724791466666954,
+      "top_device_ops_ms_per_step": [
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, fals",
+          2.8348
+        ],
+        [
+          "fmha_cutlassF_f16_aligned_64x64_rf_sm75(PyTorchMemEffAttention::AttentionKernel<cutlass::h",
+          2.6407
+        ],
+        [
+          "std::enable_if<true, void>::type internal::gemvx::kernel<int, int, __half, __half, __half,",
+          1.6862
+        ],
+        [
+          "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __h",
+          1.1238
+        ],
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, true",
+          0.7998
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.7816
+        ],
+        [
+          "void at::native::vectorized_elementwise_kernel<4, at::native::float16_copy_kernel_cuda(at:",
+          0.4181
+        ],
+        [
+          "void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::MeanOps<flo",
+          0.4095
+        ]
+      ]
+    },
+    "static_cuda_graph": {
+      "device_events_per_step": 1204.0,
+      "device_busy_ms_per_step": 11.80391709999971,
+      "top_device_ops_ms_per_step": [
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, fals",
+          2.6315
+        ],
+        [
+          "fmha_cutlassF_f16_aligned_64x64_rf_sm75(PyTorchMemEffAttention::AttentionKernel<cutlass::h",
+          1.8996
+        ],
+        [
+          "std::enable_if<true, void>::type internal::gemvx::kernel<int, int, __half, __half, __half,",
+          1.4711
+        ],
+        [
+          "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __h",
+          1.0168
+        ],
+        [
+          "void gemv2T_kernel_val<int, int, __half, __half, __half, float, 128, 16, 4, 4, false, true",
+          0.6884
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.6295
+        ],
+        [
+          "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native:",
+          0.3885
+        ],
+        [
+          "void at::native::vectorized_elementwise_kernel<4, at::native::float16_copy_kernel_cuda(at:",
+          0.3859
+        ]
+      ]
+    }
+  }
+}
