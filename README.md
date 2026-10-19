@@ -12,6 +12,7 @@ Measured, reproducible experiments on LLM serving, compression, fine-tuning and 
 | **Exp 4: LoRA and QLoRA fine-tuning** | How do rank, adapted layers and a 4-bit base trade accuracy, memory and time? | Done: [REPORT_EXP4.md](REPORT_EXP4.md) |
 | **Exp 5: Transformer internals** | Does a from-scratch decoder match Hugging Face, and does our LoRA match PEFT? | Done: [REPORT_EXP5.md](REPORT_EXP5.md) |
 | **Exp 6: Decode profiling** | Where does single-stream decode time go, and do CUDA graphs remove the overhead? | Done: [REPORT_EXP6.md](REPORT_EXP6.md) |
+| **Exp 7: Launch-aware decode model** | Does max(GPU time, CPU launch time) predict the decode step across model sizes and precisions? | Done, preregistered: [REPORT_EXP7.md](REPORT_EXP7.md). Predictions accurate (about 3% error); one preregistered criterion failed, see the report |
 
 ## Exp 1 in one table
 
@@ -116,6 +117,25 @@ The decode step of the from-scratch model of Exp 5 (fp16, batch of one, T4), run
 
 ![Decode time budget](plots/decode_budget.png)
 
+## Exp 7 in one table
+
+A two-term model of the batch-1 decode step on a T4, `eager = max(GPU time, CPU launch time)` and `CUDA graph = GPU time`, fitted on Qwen2.5-1.5B (fp16) and used to predict other sizes and precisions. Predictions and acceptance criteria were committed before measuring (`PREREGISTRATION_EXP7.md`, `PREREGISTRATION_EXP7B.md`).
+
+| Run | Eager step measured / predicted (ms) | Graph step measured / predicted (ms) |
+|---|---:|---:|
+| 0.5B fp16 | 25.4 / 25.9 | 9.7 / 10.6 |
+| 3B fp16 | 38.7 / 38.8 | 35.4 / 35.4 |
+| 0.5B fp32 | 20.4 / 23.2 | 14.2 / 14.1 |
+| 1.5B fp32 | 32.1 / 32.4 | 32.6 / 32.4 |
+| 3B fp32 | 59.9 / 59.9 | 59.8 / 59.9 |
+
+- **Mean absolute error about 3%**, against 27% to 41% for models that scale by layer count only or by weight bytes only.
+- **Preregistered verdict: not accepted.** Exp 7 met all criteria, but in Exp 7b the criterion on the regime (CPU-bound or GPU-bound) failed.
+- **Why it failed:** the regime rule (enqueue time at least 95% of step time) cannot tell the two cases apart, because a CPU blocked on a full launch queue also looks "CPU-bound". The two largest fp32 runs have the GPU busy 96% to 98% of the step and a CUDA graph gives no speed-up, which is what the model predicted. That reading is post-hoc and needs a new preregistered test.
+- **The eager step depends on the host** (25.1, 30.2 and 27.1 ms for the same model in three sessions), the graph step much less.
+
+![Exp 7b model against measurements](plots/launch7b_model.png)
+
 ## Setup (Exp 1 and 2)
 
 | | |
@@ -136,6 +156,9 @@ llm-lab/
 ├── REPORT_EXP4.md             # full Exp 4 (LoRA / QLoRA) report
 ├── REPORT_EXP5.md             # full Exp 5 (transformer internals) report
 ├── REPORT_EXP6.md             # full Exp 6 (decode profiling) report
+├── REPORT_EXP7.md             # full Exp 7 / 7b (launch-aware decode model) report
+├── PREREGISTRATION_EXP7.md    # predictions and criteria written before Exp 7
+├── PREREGISTRATION_EXP7B.md   # predictions and criteria written before Exp 7b
 ├── src/
 │   ├── bench_inference.py     # load generator (TTFT, latency, throughput, peak memory)
 │   ├── hf_server.py           # Transformers baseline: one generate() at a time
@@ -145,8 +168,10 @@ llm-lab/
 │   ├── plot_lora.py           # Exp 4 figure from results/lora_summary.csv
 │   ├── exp5_internals.py      # Exp 5: from-scratch Qwen2 vs Hugging Face, LoRA vs PEFT
 │   ├── exp6_profiling.py      # Exp 6: decode step overhead, CUDA graphs, profiler
-│   └── plot_exp6.py           # Exp 6 figure from the results of Exp 1, 5 and 6
-├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, internals_*.json, profiling_exp6.json, env files
+│   ├── plot_exp6.py           # Exp 6 figure from the results of Exp 1, 5 and 6
+│   ├── exp7_launch_model.py   # Exp 7: measure the decode step of one model size and precision
+│   └── exp7_fit.py            # Exp 7: fit the two-term model, check the preregistered criteria
+├── results/                   # raw JSON per run, all_runs.csv, summary.csv, quant_*.json, quant_summary.csv, lora_*.json, lora_summary.csv, internals_*.json, launch_*.json, launch7b_*.json, profiling_exp6.json, env files
 ├── plots/
 └── logs/                      # server logs (KV cache size, prefix-cache hit rates)
 ```
@@ -197,6 +222,15 @@ python src/exp5_internals.py lora-peft --rank 8 --out results/internals_lora_pef
 ```bash
 python src/exp6_profiling.py run --check --bench --profile --repeats 5 --out results/profiling_exp6.json
 python src/plot_exp6.py --results results --out plots/decode_budget.png
+```
+
+## Reproduce Exp 7
+
+```bash
+python src/exp7_launch_model.py --model Qwen/Qwen2.5-1.5B-Instruct --out results/launch7b_1p5b_fp16.json
+python src/exp7_launch_model.py --model Qwen/Qwen2.5-3B-Instruct --dtype fp32 --out results/launch7b_3b_fp32.json
+python src/exp7_fit.py --results-dir results --prefix launch7b --reference 1.5B --reference-dtype fp16 \
+    --out results/launch7b_fit.json --plot plots/launch7b_model.png
 ```
 
 ## Known caveats

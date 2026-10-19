@@ -1,0 +1,179 @@
+{
+  "reference": "Qwen2.5-1.5B-Instruct fp16",
+  "fit": {
+    "bandwidth_bytes_per_s": 242211979425.40088,
+    "c_layer_ms": 0.24817682907341382,
+    "ops_per_layer": 49.92857142857143,
+    "t_launch_ms": 0.01938412784179879,
+    "reference_is_cpu_bound": true,
+    "reference_floor_ms": 12.7468039166531
+  },
+  "rows": [
+    {
+      "model": "Qwen/Qwen2.5-0.5B-Instruct",
+      "dtype": "fp32",
+      "file": "launch7b_0p5b_fp32.json",
+      "params_b": 0.494032768,
+      "weights_gb": 1.976131072,
+      "layers": 24,
+      "is_reference": false,
+      "predicted": {
+        "gpu_ms": 14.114928190289382,
+        "cpu_ms": 23.227723476715465,
+        "eager_ms": 23.227723476715465,
+        "graph_ms": 14.114928190289382,
+        "speedup": 1.6456140026766408,
+        "regime": "CPU-bound"
+      },
+      "measured": {
+        "eager_ms": 20.376079814173313,
+        "graph_ms": 14.238142059842563,
+        "speedup": 1.4310912005606593,
+        "regime": "CPU-bound",
+        "gpu_busy_fraction_eager": 0.6832404348774426
+      },
+      "error_pct": {
+        "eager": 13.995055420614278,
+        "graph": -0.8653788467295587
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": -14.876077705823054,
+          "graph": -11.460281397084493
+        },
+        "layers_only": {
+          "eager": 13.995055420614278,
+          "graph": 18.569373415202485
+        }
+      },
+      "regime_correct": true
+    },
+    {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "dtype": "fp16",
+      "file": "launch7b_1p5b_fp16.json",
+      "params_b": 1.543714304,
+      "weights_gb": 3.087428608,
+      "layers": 28,
+      "is_reference": true,
+      "predicted": {
+        "gpu_ms": 19.695755130708687,
+        "cpu_ms": 27.09901072283471,
+        "eager_ms": 27.09901072283471,
+        "graph_ms": 19.695755130708687,
+        "speedup": 1.375880769383816,
+        "regime": "CPU-bound"
+      },
+      "measured": {
+        "eager_ms": 27.09901072283471,
+        "graph_ms": 19.695755130708687,
+        "speedup": 1.375880769383816,
+        "regime": "CPU-bound",
+        "gpu_busy_fraction_eager": 0.6984207219559252
+      },
+      "error_pct": {
+        "eager": 0.0,
+        "graph": 0.0
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": 0.0,
+          "graph": 0.0
+        },
+        "layers_only": {
+          "eager": 0.0,
+          "graph": 0.0
+        }
+      },
+      "regime_correct": true
+    },
+    {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "dtype": "fp32",
+      "file": "launch7b_1p5b_fp32.json",
+      "params_b": 1.543714304,
+      "weights_gb": 6.174857216,
+      "layers": 28,
+      "is_reference": false,
+      "predicted": {
+        "gpu_ms": 32.44255904736178,
+        "cpu_ms": 27.09901072283471,
+        "eager_ms": 32.44255904736178,
+        "graph_ms": 32.44255904736178,
+        "speedup": 1.0,
+        "regime": "GPU-bound"
+      },
+      "measured": {
+        "eager_ms": 32.11858116535441,
+        "graph_ms": 32.58746424724407,
+        "speedup": 0.985611550554158,
+        "regime": "CPU-bound",
+        "gpu_busy_fraction_eager": 0.9579046743982876
+      },
+      "error_pct": {
+        "eager": 1.0086930065168476,
+        "graph": -0.44466546639799764
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": 68.74351070068936,
+          "graph": 20.879335570728607
+        },
+        "layers_only": {
+          "eager": -15.62824464965532,
+          "graph": -39.56033221463569
+        }
+      },
+      "regime_correct": false
+    },
+    {
+      "model": "Qwen/Qwen2.5-3B-Instruct",
+      "dtype": "fp32",
+      "file": "launch7b_3b_fp32.json",
+      "params_b": 3.085938688,
+      "weights_gb": 12.343754752,
+      "layers": 36,
+      "is_reference": false,
+      "predicted": {
+        "gpu_ms": 59.89697628929346,
+        "cpu_ms": 34.8415852150732,
+        "eager_ms": 59.89697628929346,
+        "graph_ms": 59.89697628929346,
+        "speedup": 1.0,
+        "regime": "GPU-bound"
+      },
+      "measured": {
+        "eager_ms": 59.879302121259755,
+        "graph_ms": 59.84231408031512,
+        "speedup": 1.0006180917551917,
+        "regime": "CPU-bound",
+        "gpu_busy_fraction_eager": 0.9775828618508622
+      },
+      "error_pct": {
+        "eager": 0.029516322681777396,
+        "graph": 0.09134374199664119
+      },
+      "baselines_error_pct": {
+        "bandwidth_only": {
+          "eager": 80.9368674775202,
+          "graph": 31.587494419738405
+        },
+        "layers_only": {
+          "eager": -41.81364180812167,
+          "graph": -57.683598756732344
+        }
+      },
+      "regime_correct": false
+    }
+  ],
+  "mean_abs_error_pct": {
+    "model": 2.73910880082285,
+    "bandwidth_only": 38.08059454526402,
+    "layers_only": 31.20837437749363
+  },
+  "criteria": {
+    "1_errors_within_20_percent": true,
+    "2_regime_correct_for_all": false,
+    "3_lower_mean_error_than_both_baselines": true
+  }
+}

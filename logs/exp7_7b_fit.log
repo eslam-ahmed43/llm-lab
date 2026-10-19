@@ -1,0 +1,16 @@
+fitted on Qwen2.5-1.5B-Instruct fp16: c_layer 248 us, 49.9 operations per layer, t_launch 19.4 us per operation
+
+run                            meas eager    pred   err%   meas graph    pred   err%   speedup m/p  regime meas / pred
+Qwen2.5-0.5B-Instruct fp32          20.38   23.23  +14.0        14.24   14.11   -0.9   1.43 / 1.65  CPU-bound / CPU-bound
+Qwen2.5-1.5B-Instruct fp16          27.10   27.10   +0.0        19.70   19.70   +0.0   1.38 / 1.38  CPU-bound / CPU-bound  (fit)
+Qwen2.5-1.5B-Instruct fp32          32.12   32.44   +1.0        32.59   32.44   -0.4   0.99 / 1.00  CPU-bound / GPU-bound
+Qwen2.5-3B-Instruct fp32            59.88   59.90   +0.0        59.84   59.90   +0.1   1.00 / 1.00  CPU-bound / GPU-bound
+
+mean absolute error over all predicted eager and graph steps of the test runs: model 2.7%, bandwidth_only 38.1%, layers_only 31.2%
+regimes measured in the test runs: Qwen2.5-0.5B-Instruct fp32: CPU-bound, Qwen2.5-1.5B-Instruct fp32: CPU-bound, Qwen2.5-3B-Instruct fp32: CPU-bound
+  criterion 1_errors_within_20_percent: PASS
+  criterion 2_regime_correct_for_all: FAIL
+  criterion 3_lower_mean_error_than_both_baselines: PASS
+  model NOT accepted by the preregistered criteria
+
+saved /kaggle/working/llm-lab/results/launch7b_fit.json and /kaggle/working/llm-lab/plots/launch7b_model.png
